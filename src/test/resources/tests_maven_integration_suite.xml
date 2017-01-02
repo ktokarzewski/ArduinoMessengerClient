@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+<suite name="ArduinoMessengerIntegration" parallel="instances"
+	thread-count="4">
+
+	<test name="ArduinoMessenger_integration">
+		<packages>
+            <package name="pl.com.tokarzewski.arduinomessenger.testing.test.integration.*"/>
+		</packages>
+	</test>
+
+</suite>
