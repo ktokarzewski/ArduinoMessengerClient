@@ -1,12 +1,12 @@
 package pl.com.tokarzewski.arduinomessenger;
 
 
-import java.util.Observer;
+import pl.com.tokarzewski.arduinomessenger.connection.IncomingDataListener;
 
-public interface Messenger extends Observer {
-    void sendRequestMessage(String request);
+public interface Messenger extends IncomingDataListener {
+    void sendGetMessage(String request);
 
-    void sendResponseMessage(String resourceName, String value);
+    void sendPutMessage(String resourceName, String value);
 
     void sendHelloMessage();
 

@@ -16,7 +16,7 @@ import java.util.Map;
  */
 public class MessageTypes {
     public static final String HELLO = "HELLO";
-    public static final String SEND = "SEND";
+    public static final String PUT = "PUT";
     public static final String GET = "GET";
     public static final String ERROR = "ERROR";
     private static final Map<String,Class> CLASS_MAP = initializeMap();
@@ -24,7 +24,7 @@ public class MessageTypes {
     private static Map<String,Class> initializeMap(){
         Map<String,Class> map = new HashMap<>();
         map.put(HELLO, HelloMessage.class);
-        map.put(SEND, SendMessage.class);
+        map.put(PUT, PutMessage.class);
         map.put(GET, GetMessage.class);
         return map;
     }
@@ -34,6 +34,6 @@ public class MessageTypes {
     }
     
     public static List<String> getValidTypeList(){
-        return Arrays.asList(HELLO,SEND,GET);
+        return Arrays.asList(HELLO, PUT, GET);
     }
 }

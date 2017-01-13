@@ -5,15 +5,14 @@ import org.junit.Ignore;
 import org.junit.Test;
 import pl.com.tokarzewski.arduinomessenger.connection.Connection;
 import pl.com.tokarzewski.arduinomessenger.connection.ConnectionImpl;
+import pl.com.tokarzewski.arduinomessenger.connection.ResponseHandler;
+import pl.com.tokarzewski.arduinomessenger.connection.SocketDAO;
 import pl.com.tokarzewski.arduinomessenger.messages.GetMessage;
 import pl.com.tokarzewski.arduinomessenger.messages.HelloMessage;
 import pl.com.tokarzewski.arduinomessenger.messages.Message;
-import pl.com.tokarzewski.arduinomessenger.messages.SendMessage;
+import pl.com.tokarzewski.arduinomessenger.messages.PutMessage;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.mockito.BDDMockito.willReturn;
@@ -43,7 +42,7 @@ public class MessengerImplTest {
         //given
         GetMessage getMessage = new GetMessage(message);
         //when
-        messenger.sendRequestMessage(message);
+        messenger.sendGetMessage(message);
         //then
         verify(connection, times(1)).sendMessage(getMessage.toString());
     }
@@ -52,13 +51,13 @@ public class MessengerImplTest {
     @Test
     public void shouldSendResponseMessage() throws Exception {
         //given
-        SendMessage sendMessage = new SendMessage(message, color);
+        PutMessage putMessage = new PutMessage(message, color);
 
         //when
-        messenger.sendResponseMessage(message, color);
+        messenger.sendPutMessage(message, color);
 
         //then
-        verify(connection, times(1)).sendMessage(sendMessage.toString());
+        verify(connection, times(1)).sendMessage(putMessage.toString());
     }
 
     @Test
@@ -73,34 +72,7 @@ public class MessengerImplTest {
         verify(connection, times(1)).sendMessage(hello.toString());
     }
 
-    @Test
-    public void shouldReceiveResponse() throws Exception {
 
-        final List<Message> messageWraper = new ArrayList<>(1);
-        MessageListener messageListener = new MessageListener() {
-
-            @Override
-            public void onNewMessage(Message message) {
-                messageWraper.add(message);
-            }
-
-        };
-        //given
-        String response = "GET\n" +
-                "{\"request\":\"banana\",\"id\":\"Kamil\"};";
-        messenger.addIncomingMessageListener(messageListener);
-
-
-        willReturn(response).given(connection).getResponse();
-
-        //when
-        messenger.update(null, null);
-
-        //then
-
-        assertThat(messageWraper.get(0).toString()).isEqualTo(response);
-
-    }
 
 
     @Ignore
@@ -117,12 +89,12 @@ public class MessengerImplTest {
             }
         };
         m.addIncomingMessageListener(handler);
-        c.setUpAndConnect();
-        m.sendRequestMessage("temperature");
+        c.setupAndConnect();
+        m.sendGetMessage("temperature");
         Thread.sleep(100);
-        m.sendRequestMessage("temperature");
+        m.sendGetMessage("temperature");
         Thread.sleep(100);
-        m.sendRequestMessage("temperature");
+        m.sendGetMessage("temperature");
         Thread.sleep(100);
 
         assertThat(c.isConnected()).isTrue();

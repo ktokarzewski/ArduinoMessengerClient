@@ -1,45 +1,37 @@
 package pl.com.tokarzewski.arduinomessenger;
 
 import pl.com.tokarzewski.arduinomessenger.connection.Connection;
-import pl.com.tokarzewski.arduinomessenger.connection.ConnectionImpl;
-import pl.com.tokarzewski.arduinomessenger.exceptions.ResponseHandleException;
+import pl.com.tokarzewski.arduinomessenger.exceptions.MessageDeserializerException;
 import pl.com.tokarzewski.arduinomessenger.exceptions.UnableToSendMessageException;
 import pl.com.tokarzewski.arduinomessenger.messages.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Observable;
 
 
 public class MessengerImpl implements Messenger {
 
     private MessageDeserializer deserializer;
     private Connection connection;
-    private String response;
     private Message message;
     private List<MessageListener> listeners;
-
-    public MessengerImpl(String serverHost, int serverPort) {
-        this(new ConnectionImpl(serverHost, serverPort));
-    }
 
 
     public MessengerImpl(Connection c) {
         this.connection = c;
         this.deserializer = new MessageDeserializer();
-        this.connection.addResponseObserver(this);
+        this.connection.addIncomingDataListener(this);
         this.listeners = new ArrayList<>();
     }
 
     @Override
-    public void sendRequestMessage(String request) {
+    public void sendGetMessage(String request) {
         sendBySender(new GetMessage(request));
-        //logger.info("GetMessage sent");
     }
 
     @Override
-    public void sendResponseMessage(String resourceName, String value) {
-        sendBySender(new SendMessage(resourceName, value));
+    public void sendPutMessage(String resourceName, String value) {
+        sendBySender(new PutMessage(resourceName, value));
     }
 
     @Override
@@ -57,16 +49,10 @@ public class MessengerImpl implements Messenger {
         try {
             connection.sendMessage(messageString);
         } catch (UnableToSendMessageException e) {
-            e.printStackTrace();    //
+            e.printStackTrace();
         }
     }
 
-    @Override
-    public void update(Observable o, Object arg) {
-        getResponse();
-        deserializeResponse();
-        notifyListeners();
-    }
 
     private void notifyListeners() {
         for (MessageListener listener : listeners) {
@@ -74,16 +60,17 @@ public class MessengerImpl implements Messenger {
         }
     }
 
-    private void deserializeResponse() {
-        message = (Message) deserializer.deserializeMessage(response);
-    }
-
-    private void getResponse() {
+    private void deserializeResponse(String response) {
         try {
-            response = connection.getResponse();
-        } catch (ResponseHandleException e) {
-            e.printStackTrace();
+            message = (Message) deserializer.deserializeMessage(response);
+        } catch (MessageDeserializerException e) {
+            message = new ErrorMessage(e.getRawMessage());
         }
     }
 
+    @Override
+    public void onNewIncomingData(String data) {
+        deserializeResponse(data);
+        notifyListeners();
+    }
 }

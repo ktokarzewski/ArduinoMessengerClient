@@ -3,6 +3,8 @@ package pl.com.tokarzewski.arduinomessenger.messages;
 import com.google.gson.JsonSyntaxException;
 import org.junit.Before;
 import org.junit.Test;
+import pl.com.tokarzewski.arduinomessenger.exceptions.InvalidMessageFormatException;
+import pl.com.tokarzewski.arduinomessenger.exceptions.MessageDeserializerException;
 import pl.com.tokarzewski.arduinomessenger.utils.ArduUserAgent;
 
 import static com.googlecode.catchexception.apis.BDDCatchException.caughtException;
@@ -20,25 +22,25 @@ public class MessageDeserializerTest {
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWhenIncorrectDataPassed() {
+    public void shouldThrowIllegalArgumentExceptionWhenIncorrectDataPassed() throws MessageDeserializerException {
 
         when(resolver).deserializeMessage("MALFORMED DATA");
 
         assertThat(caughtException())
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidMessageFormatException.class);
     }
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWhenEmptyStringPassed() {
+    public void shouldThrowInvalidMessageFormatWhenEmptyStringPassed() throws MessageDeserializerException {
         when(resolver).deserializeMessage("");
 
         assertThat(caughtException())
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidMessageFormatException.class);
     }
 
 
     @Test
-    public void shouldThrowJSonSyntaxException() throws JsonSyntaxException {
+    public void shouldThrowJSonSyntaxException() throws MessageDeserializerException {
         when(resolver).deserializeMessage("GET\n ILLEGAL CHARACTERS");
 
         assertThat(caughtException())
@@ -46,7 +48,7 @@ public class MessageDeserializerTest {
     }
 
     @Test
-    public void testHelloFrameDeserialization() {
+    public void testHelloFrameDeserialization() throws MessageDeserializerException {
         HelloMessage hello = (HelloMessage) resolver.deserializeMessage(helloString);
         ArduUserAgent userAgent = ArduUserAgent.getDefaultUserAgent();
         String expected = userAgent.toString();
@@ -57,7 +59,7 @@ public class MessageDeserializerTest {
 
 
     @Test
-    public void shouldGetHelloType() {
+    public void shouldGetHelloType() throws MessageDeserializerException {
         //given
         String expected = MessageTypes.HELLO;
 
@@ -89,28 +91,28 @@ public class MessageDeserializerTest {
     }
 
     @Test
-    public void shouldDeserializeAsSendMessage() throws Exception {
+    public void shouldDeserializeAsPutMessage() throws Exception {
 
-        String sendMessage = "SEND\n" +
+        String sendMessage = "PUT\n" +
                 "{\"resource\":\"12345\",\"value\":\"100 200 300 400 1000 200 300 400\",\"id\":\"Kamil\"};";
 
-        assertThat(resolver.deserializeMessage(sendMessage)).isInstanceOf(SendMessage.class);
+        assertThat(resolver.deserializeMessage(sendMessage)).isInstanceOf(PutMessage.class);
 
     }
 
 
 
     @Test
-    public void shouldThrowIllegalArgumentExceptionWhenGetDoubledMessageContent() throws Exception {
+    public void shouldThrowInvalidMessageFormatExceptionWhenMessageContentIsDoubled() throws Exception {
 
         String getMessage = "GET\n" +
-                "{\"request\":\"banana\",\"content\":{},\"id\":\"Kamil\"}\r\n"
+                "{\"request\":\"banana\",\"content\":{},\"id\":\"Kamil\"};"
                 + "GET\n" +
-                "{\"request\":\"banana\",\"content\":{},\"id\":\"Kamil\"}\r\n";
+                "{\"request\":\"banana\",\"content\":{},\"id\":\"Kamil\"};";
 
         when(resolver).deserializeMessage(getMessage);
 
-        assertThat(caughtException()).isInstanceOf(IllegalArgumentException.class);
+        assertThat(caughtException()).isInstanceOf(InvalidMessageFormatException.class);
 
     }
 

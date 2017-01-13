@@ -17,7 +17,9 @@ public class ArduUserAgentTest {
         ArduUserAgent expectedAgent = new ArduUserAgent(os, version);
 
         //when
-        ArduUserAgent result = JsonParser.getParser().fromJson(jsonString, ArduUserAgent.class);
+        ArduUserAgent result = JsonParser
+                .getParser()
+                .fromJson(jsonString, ArduUserAgent.class);
 
         //then
         assertThat(result).isEqualTo(expectedAgent);

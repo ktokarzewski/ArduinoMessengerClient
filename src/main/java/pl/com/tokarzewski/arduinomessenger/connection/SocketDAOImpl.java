@@ -10,14 +10,15 @@ import java.nio.channels.NotYetConnectedException;
 import java.nio.channels.SocketChannel;
 import java.util.Arrays;
 
-class SocketDAOImpl implements SocketDAO {
+
+public class SocketDAOImpl implements SocketDAO {
 
     private static final int BUFFER_CAPACITY = 512;
     private static final int END_OF_STREAM = -1;
     private SocketChannel channel;
     private ByteBuffer writeBuffer;
     private ByteBuffer readBuffer;
-    private SocketAddress remoteAddress;
+    private static SocketAddress remoteAddress;
     private int bytesRead;
     private String responseString;
 
@@ -53,13 +54,13 @@ class SocketDAOImpl implements SocketDAO {
         }
     }
 
-    private void putMessageInWriteBuffer(String message) {
-        writeBuffer = ByteBuffer.wrap(message.getBytes());
-    }
-
     @Override
     public boolean isConnected() {
         return channel != null && channel.isConnected();
+    }
+
+    private void putMessageInWriteBuffer(String message) {
+        writeBuffer = ByteBuffer.wrap(message.getBytes());
     }
 
     @Override
@@ -80,14 +81,19 @@ class SocketDAOImpl implements SocketDAO {
         }
     }
 
-    private boolean reachedEndOfStream() {
-        return bytesRead == END_OF_STREAM;
-    }
-
     private boolean incomingDataAvailable() {
         return bytesRead <= 0;
     }
 
+    private boolean reachedEndOfStream() {
+        return bytesRead == END_OF_STREAM;
+    }
+
+    @Override
+    public boolean disconnect() throws IOException {
+        channel.close();
+        return isConnected();
+    }
 
     private void extractResponse() {
         responseString = new String(Arrays.copyOf(readBuffer.array(), bytesRead));
@@ -98,12 +104,8 @@ class SocketDAOImpl implements SocketDAO {
     @Override
     public boolean connect() throws IOException {
         channel = SocketChannel.open();
-        return channel == null || channel.connect(remoteAddress);
-    }
+        channel.connect(remoteAddress);
 
-    @Override
-    public boolean disconnect() throws IOException {
-        channel.close();
         return isConnected();
     }
 }

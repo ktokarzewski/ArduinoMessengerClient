@@ -3,12 +3,14 @@ package pl.com.tokarzewski.arduinomessenger.connection;
 import pl.com.tokarzewski.arduinomessenger.exceptions.UnableToSendMessageException;
 
 import java.io.IOException;
+import java.util.Observable;
+import java.util.concurrent.BlockingQueue;
 
-class ThreadSenderImpl implements Sender, Runnable {
+class ThreadSenderImpl extends Observable implements Sender, Runnable {
     private static final String THREAD_NAME = "ThreadSenderImpl";
     private SocketDAO socket;
     private String message;
-
+    private BlockingQueue<String> outputQueue;
     ThreadSenderImpl(SocketDAO socket) {
         this.socket = socket;
     }
@@ -34,7 +36,8 @@ class ThreadSenderImpl implements Sender, Runnable {
         try {
             socket.write(message);
         } catch (IOException e) {
-            e.printStackTrace();
+            setChanged();
+            notifyObservers(new UnableToSendMessageException(e));
         }
     }
 }

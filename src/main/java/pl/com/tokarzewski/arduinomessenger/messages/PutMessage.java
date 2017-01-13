@@ -5,19 +5,19 @@
  */
 package pl.com.tokarzewski.arduinomessenger.messages;
 
-public class SendMessage extends Message {
+public class PutMessage extends Message {
 
-    private static final String TYPE = MessageTypes.SEND;
+    private static final String TYPE = MessageTypes.PUT;
     private String resource;
     private String value;
 
-    public SendMessage(String id, String resource, String value) {
+    public PutMessage(String id, String resource, String value) {
         super(id);
         this.resource = resource;
         this.value = value;
     }
 
-    public SendMessage(String resource, String value) {
+    public PutMessage(String resource, String value) {
         this(defaultId, resource, value);
     }
 
@@ -32,7 +32,7 @@ public class SendMessage extends Message {
 
     @Override
     public String getType() {
-        return SendMessage.TYPE;
+        return PutMessage.TYPE;
     }
 
 

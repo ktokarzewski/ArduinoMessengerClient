@@ -35,3 +35,9 @@ hs_err_pid*
 /src/pmd/
 /src/site/
 /.idea/workspace.xml
+.travis.yml
+LICENSE
+arduino-messenger.iml
+src/test/java/IntegrationTest.java
+src/test/java/pl/com/tokarzewski/arduinomessenger/SplitterTest.java
+/src/main/java/pl/com/tokarzewski/arduinomessenger/messages/MessageSerializer.java

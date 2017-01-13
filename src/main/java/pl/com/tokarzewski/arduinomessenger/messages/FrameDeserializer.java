@@ -6,11 +6,9 @@
 package pl.com.tokarzewski.arduinomessenger.messages;
 
 
-/**
- *
- * @author Toki
- */
+import pl.com.tokarzewski.arduinomessenger.exceptions.MessageDeserializerException;
+
 public interface FrameDeserializer {
-     ProtocolFrame deserializeMessage(String message);
+    ProtocolFrame deserializeMessage(String message) throws MessageDeserializerException;
 
 }

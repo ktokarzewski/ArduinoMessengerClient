@@ -1,17 +1,10 @@
 package pl.com.tokarzewski.arduinomessenger.connection;
 
-import pl.com.tokarzewski.arduinomessenger.exceptions.ResponseHandleException;
-
 import java.io.IOException;
-import java.util.Observable;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 
-
-public class ResponseHandlerImpl extends Observable implements ResponseHandler {
+public class ResponseHandlerImpl extends ObservableResponseHandler {
     static final String THREAD_NAME = "ResponseHandlerImpl";
     private static final String END_OF_MESSAGE = ";";
-    private BlockingQueue<String> responseQueue;
     private SocketDAO socket;
     private Thread readThread;
     private String response;
@@ -22,7 +15,6 @@ public class ResponseHandlerImpl extends Observable implements ResponseHandler {
         this.socket = socket;
         response = "";
         buffer = new StringBuilder();
-        responseQueue = new ArrayBlockingQueue<>(128);
         ready = false;
     }
 
@@ -37,19 +29,12 @@ public class ResponseHandlerImpl extends Observable implements ResponseHandler {
     public void run() {
         while (isReadyToRead()) {
             readFromSocket();
-            putMessageInQueue();
-            setChangedAndNotifyObservers();
+            if (isReadyToRead()) {
+                setChangedAndNotifyObservers();
+            }
         }
     }
 
-
-    private void putMessageInQueue() {
-        try {
-            responseQueue.put(response);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void readFromSocket() {
         try {
@@ -60,8 +45,9 @@ public class ResponseHandlerImpl extends Observable implements ResponseHandler {
             extractResponse();
 
         } catch (IOException e) {
+            setChanged();
+            notifyObservers(e);
             interruptReadThread();
-            e.printStackTrace();
         }
     }
 
@@ -77,7 +63,7 @@ public class ResponseHandlerImpl extends Observable implements ResponseHandler {
 
     private void setChangedAndNotifyObservers() {
         setChanged();
-        notifyObservers();
+        notifyObservers(response);
     }
 
     @Override
@@ -89,15 +75,6 @@ public class ResponseHandlerImpl extends Observable implements ResponseHandler {
         if (ready)
             readThread.interrupt();
         ready = false;
-    }
-
-    @Override
-    public String getResponse() throws ResponseHandleException {
-        try {
-            return responseQueue.take();
-        } catch (InterruptedException e) {
-            throw new ResponseHandleException("Method shouldn't be called outside update() method of observer class", e);
-        }
     }
 
 

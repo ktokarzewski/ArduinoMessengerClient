@@ -25,7 +25,7 @@ public class GetMessageTest {
         Message get = new GetMessage("Kamil", "banana");
         String expectedFormat = "GET\n" +
                 "{\"request\":\"banana\",\"id\":\"Kamil\"};";
-        System.out.println(get.toString());
+
         assertThat(get.toString()).isEqualTo(expectedFormat);
 
     }

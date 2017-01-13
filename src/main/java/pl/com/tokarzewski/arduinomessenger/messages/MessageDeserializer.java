@@ -10,6 +10,9 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonSyntaxException;
+import pl.com.tokarzewski.arduinomessenger.exceptions.IllegalMessageTypeException;
+import pl.com.tokarzewski.arduinomessenger.exceptions.InvalidMessageFormatException;
+import pl.com.tokarzewski.arduinomessenger.exceptions.MessageDeserializerException;
 import pl.com.tokarzewski.arduinomessenger.json.JsonParser;
 
 import java.util.Iterator;
@@ -26,7 +29,7 @@ public class MessageDeserializer implements FrameDeserializer {
         parser = JsonParser.getParser();
     }
 
-    private void extractContentAndType(String data) {
+    private void extractContentAndType(String data) throws MessageDeserializerException {
         CharMatcher trimMatcher = CharMatcher.anyOf(" ;");
         Iterable<String> split = Splitter.on("\n")
                 .trimResults(trimMatcher)
@@ -37,19 +40,19 @@ public class MessageDeserializer implements FrameDeserializer {
         content = it.next().trim();
     }
 
-    private void validateRawMessage(String message, Iterable<String> split) {
+    private void validateRawMessage(String message, Iterable<String> split) throws InvalidMessageFormatException {
         if (Iterables.size(split) != SPLIT_SIZE) {
-            throw new IllegalArgumentException(message.concat(" is not correct frame content"));
+            throw new InvalidMessageFormatException(message);
         }
     }
 
-    private void setAndValidateType(String type) {
+    private void setAndValidateType(String type) throws MessageDeserializerException {
         if (messageIsValid(type))
             this.type = type;
     }
 
     @Override
-    public ProtocolFrame deserializeMessage(String message) throws IllegalArgumentException {
+    public ProtocolFrame deserializeMessage(String message) throws MessageDeserializerException {
         extractContentAndType(message);
         deserializeFrame();
         return this.frame;
@@ -64,9 +67,9 @@ public class MessageDeserializer implements FrameDeserializer {
         }
     }
 
-    private boolean messageIsValid(String type) throws IllegalArgumentException {
+    private boolean messageIsValid(String type) throws MessageDeserializerException {
         if (!(MessageTypes.getValidTypeList().contains(type))) {
-            throw new IllegalArgumentException("Unsupported message type: ".concat(type));
+            throw new IllegalMessageTypeException(type);
         } else return true;
     }
 

@@ -9,14 +9,11 @@ import pl.com.tokarzewski.arduinomessenger.json.JsonObject;
 
 
 public abstract class Message extends JsonObject implements ProtocolFrame {
-    //    protected Map<String, String> content;
     static String defaultId = System.getProperty("user.name", "anonymous");
     protected String id;
 
-
     Message(String id) {
         this.id = id;
-        //this.content = new HashMap<>();
     }
 
     public static void setDefaultId(String id) {
@@ -27,15 +24,9 @@ public abstract class Message extends JsonObject implements ProtocolFrame {
         return this.id;
     }
 
-//    @Override
-//    public Map<String, String> getContent() {
-//        return content;
-//    }
-
     @Override
     public String toString() {
         return getType() + "\n" + super.toString() + ";";
     }
-
 
 }

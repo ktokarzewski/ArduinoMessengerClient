@@ -1,11 +1,11 @@
 package pl.com.tokarzewski.arduinomessenger.connection;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Observable;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,22 +15,15 @@ import static org.mockito.Mockito.mock;
 
 public class ResponseHandlerImplTest {
 
-    public static final String LF = "\n";
-    public static final String END_OF_MESSAGE = ";";
-    private SocketDAO socket;
-    private ResponseHandler responseHandler;
+    private static final String LF = "\n";
+    private static final String END_OF_MESSAGE = ";";
 
-    @Before
-    public void setUp() throws Exception {
-
-        socket = mock(SocketDAO.class);
-        responseHandler = new ResponseHandlerImpl(socket);
-
-
-    }
 
     @Test
     public void shouldStartReadThread() throws Exception {
+
+        SocketDAO socket = mock(SocketDAO.class);
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
 
 
         willReturn(true).given(socket).isConnected();
@@ -56,12 +49,17 @@ public class ResponseHandlerImplTest {
     public void shouldGetResponse() throws Exception {
         //given
         String expectedResponse = "response content" + END_OF_MESSAGE;
+        SocketDAO socket = mock(SocketDAO.class);
         willReturn(true).given(socket).isConnected();
         willReturn(expectedResponse).given(socket).read();
-        responseHandler.startReadThread();
+
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
+        SynchronousObserver observer = new SynchronousObserver();
+        responseHandler.addObserver(observer);
 
         //when
-        String response = responseHandler.getResponse();
+        responseHandler.startReadThread();
+        String response = observer.getData();
 
         //then
         assertThat(response).isEqualTo(expectedResponse);
@@ -69,18 +67,28 @@ public class ResponseHandlerImplTest {
 
     @Test
     public void shouldBeReadyToReadData() throws Exception {
+
         //given
+        SocketDAO socket = mock(SocketDAO.class);
         willReturn(true).given(socket).isConnected();
+
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
+
         //when
         responseHandler.startReadThread();
+
         //then
         assertThat(responseHandler.isReadyToRead()).isTrue();
     }
 
     @Test
     public void shouldNotBeReadyToReadDataWhenSocketIsNotConnected() throws Exception {
+
         //given
+        SocketDAO socket = mock(SocketDAO.class);
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
         willReturn(false).given(socket).isConnected();
+
         //when
         responseHandler.startReadThread();
         //then
@@ -89,9 +97,13 @@ public class ResponseHandlerImplTest {
 
     @Test
     public void shouldNotBeReadyToReadDataBeforeStartReadThread() throws Exception {
+
         //given
+        SocketDAO socket = mock(SocketDAO.class);
         willReturn(true).given(socket).isConnected();
 
+        //when
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
 
         //then
         assertThat(responseHandler.isReadyToRead()).isFalse();
@@ -100,10 +112,14 @@ public class ResponseHandlerImplTest {
     @Test
     public void shouldInterruptReadingThread() throws Exception {
         //given
+        SocketDAO socket = mock(SocketDAO.class);
         willReturn(true).given(socket).isConnected();
+        ResponseHandlerImpl responseHandler = new ResponseHandlerImpl(socket);
         responseHandler.startReadThread();
+
         //when
         responseHandler.interruptReadThread();
+
         //then
         assertThat(responseHandler.isReadyToRead()).isFalse();
     }
@@ -112,43 +128,55 @@ public class ResponseHandlerImplTest {
     public void shouldHandleDoubledMessage() throws Exception {
         //given
         String firstMessage = "GET" + LF + "get content" + END_OF_MESSAGE;
-        String secondMessage = "SEND" + LF + "send content" + END_OF_MESSAGE;
+        String secondMessage = "PUT" + LF + "send content" + END_OF_MESSAGE;
         String doubledMessage = firstMessage + secondMessage;
 
-        StubSocketDAO socket = new StubSocketDAO();
-        socket.read.add(doubledMessage);
+        SocketDAO socket = mock(SocketDAO.class);
+        willReturn(true).given(socket).isConnected();
+        willReturn(doubledMessage).given(socket).read();
 
-        ResponseHandler handler = new ResponseHandlerImpl(socket);
+        ObservableResponseHandler handler = new ResponseHandlerImpl(socket);
+        SynchronousObserver observer = new SynchronousObserver();
+        handler.addObserver(observer);
+
         //when
         handler.startReadThread();
 
         //then
-        assertThat(handler.getResponse()).isEqualTo(firstMessage);
-        assertThat(handler.getResponse()).isEqualTo(secondMessage);
+        assertThat(observer.getData()).isEqualTo(firstMessage);
+        assertThat(observer.getData()).isEqualTo(secondMessage);
+
+        handler.interruptReadThread();
+
     }
 
     @Test
     public void shouldHandleTwoMessagesInParts() throws Exception {
         //given
         String firstMessage = "GET" + LF + "get content" + END_OF_MESSAGE;
-        String secondMessagePart1 = "SEND" + LF;
+        String secondMessagePart1 = "PUT" + LF;
         String secondMessagePart2 = "content" + END_OF_MESSAGE;
         String secondMessageFull = secondMessagePart1 + secondMessagePart2;
 
         String message = firstMessage + secondMessagePart1;
-        StubSocketDAO socket = new StubSocketDAO();
-        socket.read.add(message);
-        socket.read.add(secondMessagePart2);
+        SocketDAO socket = mock(SocketDAO.class);
+        willReturn(true).given(socket).isConnected();
+        willReturn(message)
+                .willReturn(secondMessagePart2)
+                .given(socket).read();
 
+        ObservableResponseHandler handler = new ResponseHandlerImpl(socket);
+        SynchronousObserver observer = new SynchronousObserver();
+        handler.addObserver(observer);
 
-        ResponseHandler handler = new ResponseHandlerImpl(socket);
         //when
         handler.startReadThread();
 
         //then
-        assertThat(handler.getResponse()).isEqualTo(firstMessage);
+        assertThat(observer.getData()).isEqualTo(firstMessage);
+        assertThat(observer.getData()).isEqualTo(secondMessageFull);
+        handler.interruptReadThread();
 
-        assertThat(handler.getResponse()).isEqualTo(secondMessageFull);
     }
 
     @Test
@@ -156,36 +184,46 @@ public class ResponseHandlerImplTest {
         //given
         String message = "GET" + LF + "get content" + END_OF_MESSAGE;
 
-        StubSocketDAO socket = new StubSocketDAO();
-        socket.read.add(message);
+        SocketDAO socket = mock(SocketDAO.class);
+        willReturn(message).given(socket).read();
+        willReturn(true).given(socket).isConnected();
 
-        ResponseHandler handler = new ResponseHandlerImpl(socket);
+        ObservableResponseHandler handler = new ResponseHandlerImpl(socket);
+
+        SynchronousObserver observer = new SynchronousObserver();
+        handler.addObserver(observer);
         handler.startReadThread();
 
-        assertThat(handler.getResponse()).isEqualTo(message);
+        assertThat(observer.getData()).isEqualTo(message);
+
+        handler.interruptReadThread();
+
     }
 
     @Test
     public void shouldHandleSingleMessageInParts() throws Exception {
         //given
         String message = "GET" + LF + "get content" + END_OF_MESSAGE;
-        StubSocketDAO socket = new StubSocketDAO();
-        socket.read.add("GET");
-        socket.read.add(LF);
-        socket.read.add("get ");
-        socket.read.add("content");
-        socket.read.add(END_OF_MESSAGE);
-        ResponseHandler handler = new ResponseHandlerImpl(socket);
+        SocketDAO socket = mock(SocketDAO.class);
+        willReturn(true).given(socket).isConnected();
+        willReturn("GET")
+                .willReturn(LF)
+                .willReturn("get ")
+                .willReturn("content")
+                .willReturn(END_OF_MESSAGE)
+                .given(socket).read();
+
+        ObservableResponseHandler handler = new ResponseHandlerImpl(socket);
+        SynchronousObserver observer = new SynchronousObserver();
+        handler.addObserver(observer);
+
         //when
         handler.startReadThread();
 
-        assertThat(handler.getResponse()).isEqualTo(message);
+        assertThat(observer.getData()).isEqualTo(message);
 
+        handler.interruptReadThread();
 
     }
 
-    @After
-    public void tearDown() throws Exception {
-        responseHandler.interruptReadThread();
-    }
 }

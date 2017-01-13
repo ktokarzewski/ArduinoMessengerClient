@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.channels.NotYetConnectedException;
 
 
-class SenderImpl implements Sender {
+public class SenderImpl implements Sender {
     private SocketDAO socket;
     private String message;
 
