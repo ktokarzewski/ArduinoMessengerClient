@@ -72,36 +72,4 @@ public class MessengerImplTest {
         verify(connection, times(1)).sendMessage(hello.toString());
     }
 
-
-
-
-    @Ignore
-    @Test
-    public void shouldCommunicateWithArduino() throws Exception {
-        Connection c = new ConnectionImpl("192.168.1.10", 5544);
-        Messenger m = new MessengerImpl(c);
-        final Queue<Message> messageQueue = new LinkedList<>();
-        MessageListener handler = new MessageListener() {
-            @Override
-            public void onNewMessage(Message message) {
-                messageQueue.add(message);
-                System.out.println("new Message");
-            }
-        };
-        m.addIncomingMessageListener(handler);
-        c.setupAndConnect();
-        m.sendGetMessage("temperature");
-        Thread.sleep(100);
-        m.sendGetMessage("temperature");
-        Thread.sleep(100);
-        m.sendGetMessage("temperature");
-        Thread.sleep(100);
-
-        assertThat(c.isConnected()).isTrue();
-        while (messageQueue.size() < 3) ;
-
-        while (messageQueue.size() > 0)
-            System.out.println(messageQueue.poll());
-
-    }
 }
