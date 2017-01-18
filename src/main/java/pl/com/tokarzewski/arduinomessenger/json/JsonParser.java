@@ -37,7 +37,7 @@ public class JsonParser {
 
     private JsonReader setUpReader(String content) {
         JsonReader reader = new JsonReader(new StringReader(content));
-        reader.setLenient(true);
+        //   reader.setLenient(true);
         return reader;
     }
 

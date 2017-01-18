@@ -50,7 +50,7 @@ public class ConnectionImplTest {
         final Stack<Boolean> statusWrapper = new Stack<>();
         ConnectionStatusListener listener = new ConnectionStatusListener() {
             @Override
-            public void connectionStatusChanged(boolean connected) {
+            public void onConnectionStatusChange(boolean connected) {
                 statusWrapper.push(connected);
             }
         };
@@ -88,18 +88,6 @@ public class ConnectionImplTest {
         verify(socket, times(3)).isConnected();
         connection.tearDownAndDisconnect();
 
-    }
-    @Ignore
-    @Test
-    public void shouldThrowConnectException() throws Exception {
-        //given
-        int correctPort = 5544;
-        Connection connection = new ConnectionImpl("localhost", correctPort);
-
-        when(connection).setupAndConnect();
-
-        //then
-        assertThat(caughtException()).isInstanceOf(ConnectException.class);
     }
 
     @Test

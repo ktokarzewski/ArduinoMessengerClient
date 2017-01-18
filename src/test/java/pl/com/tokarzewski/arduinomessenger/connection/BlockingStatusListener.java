@@ -10,7 +10,7 @@ class BlockingStatusListener implements ConnectionStatusListener {
     private final BlockingQueue<Boolean> queue = new ArrayBlockingQueue<>(1);
 
     @Override
-    public void connectionStatusChanged(boolean connected) {
+    public void onConnectionStatusChange(boolean connected) {
         try {
             queue.put(connected);
         } catch (InterruptedException e) {

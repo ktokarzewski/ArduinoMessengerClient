@@ -1,5 +1,6 @@
 package pl.com.tokarzewski.arduinomessenger.connection;
 
+import org.jgroups.nio.MockSocketChannel;
 import org.junit.Ignore;
 import org.junit.Test;
 import pl.com.tokarzewski.arduinomessenger.exceptions.ConnectionClosedByServerException;
@@ -76,25 +77,6 @@ public class SocketDAOImplTest {
         assertThat(socket.isConnected()).isFalse();
 
 
-    }
-
-    @Ignore
-    @Test
-    public void shouldWriteToChannel() throws Exception {
-        //given
-        SocketChannel socketChannel = mock(SocketChannel.class, RETURNS_DEEP_STUBS);
-
-        willReturn(true).given(socketChannel).isConnected();
-
-
-        StubSocketChannel channel = new StubSocketChannel();
-        SocketDAO socket = new SocketDAOImpl(channel);
-        socket.connect();
-        //when
-        socket.write(message);
-
-        //then
-        verify(socketChannel).write(ByteBuffer.wrap(message.getBytes()));
     }
 
 

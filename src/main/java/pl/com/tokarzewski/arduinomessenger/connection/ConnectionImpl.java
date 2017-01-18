@@ -108,7 +108,7 @@ public class ConnectionImpl implements Connection, Observer {
 
     private void notifyConnectionStatusListeners() {
         for (ConnectionStatusListener listener : connectionStatusListeners) {
-            listener.connectionStatusChanged(isConnected());
+            listener.onConnectionStatusChange(isConnected());
         }
     }
 
